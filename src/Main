@@ -1,0 +1,51 @@
+object Main {
+  def main(args: Array[String]): Unit = {
+    println("Hello world! VCOLabs  .. . . what idk " +
+      "" +
+      "lets code! " +
+      "" +
+      "")
+  }
+
+  println("" +
+    "" +
+    "possible pages or apps" +
+    "" +
+    "Mechanic chat bot: " +
+    "       reading car repair manuals" +
+    "        giving part numbers" +
+    "        showing diagrams " +
+    "Portfolio " +
+    "       want to have different modules " +
+    "       controllers" +
+    "" +
+    "       ")
+}
+
+class user(val name: String, val age: Int)
+
+object user {
+  def apply(name: String, age: Int): user = new user(name, age)
+}
+
+
+class SynthController {
+  private var modules: Seq[Module] = Seq.empty
+
+  def addModule(module: Module): Unit = {}
+}
+
+
+ trait Module {
+  def name: String
+  def processSignal(input: Double: Unit):
+    }
+}
+
+
+//case class Oscillator(name: String) extends Module {
+//  override def processSignal(iwnput: Double): Unit = {
+    // Oscillator signal processing logic
+    println(s"Processing signal in Oscillator $name: $input")}
+
+
