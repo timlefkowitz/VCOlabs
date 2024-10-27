@@ -1,0 +1,86 @@
+import javax.inject._
+import play.api.mvc._
+import play.api.libs.json._
+import scala.concurrent.{ExecutionContext, Future}
+
+// User model for illustration purposes
+case class User(id: Long, name: String, email: String)
+object User {
+  implicit val userFormat: Format[User] = Json.format[User]
+}
+
+// Mock user repository (you might use a database in a real application)
+@Singleton
+class UserRepository @Inject() () {
+  private var users = List(
+    User(1, "Alice", "alice@example.com"),
+    User(2, "Bob", "bob@example.com")
+  )
+
+  def list(): Future[List[User]] = Future.successful(users)
+  def findById(id: Long): Future[Option[User]] = Future.successful(users.find(_.id == id))
+  def create(user: User): Future[User] = {
+    users = users :+ user
+    Future.successful(user)
+  }
+  def update(id: Long, user: User): Future[Option[User]] = {
+    users = users.map { u =>
+      if (u.id == id) user else u
+    }
+    Future.successful(Some(user))
+  }
+  def delete(id: Long): Future[Boolean] = {
+    val initialSize = users.size
+    users = users.filterNot(_.id == id)
+    Future.successful(users.size < initialSize)
+  }
+}
+
+@Singleton
+class UserController @Inject() (
+  val controllerComponents: ControllerComponents,
+  userRepository: UserRepository
+)(implicit ec: ExecutionContext) extends BaseController {
+
+  def listUsers: Action[AnyContent] = Action.async {
+    userRepository.list().map { users =>
+      Ok(Json.toJson(users))
+    }
+  }
+
+  def getUser(id: Long): Action[AnyContent] = Action.async {
+    userRepository.findById(id).map {
+      case Some(user) => Ok(Json.toJson(user))
+      case None => NotFound(Json.obj("error" -> "User not found"))
+    }
+  }
+
+  def createUser: Action[JsValue] = Action.async(parse.json) { request =>
+    request.body.validate[User].fold(
+      errors => Future.successful(BadRequest(Json.obj("error" -> "Invalid JSON"))),
+      user => {
+        userRepository.create(user).map { createdUser =>
+          Created(Json.toJson(createdUser))
+        }
+      }
+    )
+  }
+
+  def updateUser(id: Long): Action[JsValue] = Action.async(parse.json) { request =>
+    request.body.validate[User].fold(
+      errors => Future.successful(BadRequest(Json.obj("error" -> "Invalid JSON"))),
+      user => {
+        userRepository.update(id, user).map {
+          case Some(updatedUser) => Ok(Json.toJson(updatedUser))
+          case None => NotFound(Json.obj("error" -> "User not found"))
+        }
+      }
+    )
+  }
+
+  def deleteUser(id: Long): Action[AnyContent] = Action.async {
+    userRepository.delete(id).map { deleted =>
+      if (deleted) NoContent else NotFound(Json.obj("error" -> "User not found"))
+    }
+  }
+}
