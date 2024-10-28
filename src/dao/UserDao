@@ -1,0 +1,12 @@
+package dao
+
+import models.User
+import scala.concurrent.Future
+
+trait UserDao {
+  def save(user: User): Future[Unit]
+  def findById(id: Int): Future[Option[User]]
+  def findAll(): Future[List[User]]
+  def update(user: User): Future[Unit]
+  def deleteById(id: Int): Future[Unit]
+}
