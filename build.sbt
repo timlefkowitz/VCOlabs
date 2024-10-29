@@ -17,6 +17,9 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.2.9" % Test, // ScalaTest for unit testing
   "com.typesafe.akka" %% "akka-actor" % "2.6.18",   // Akka Actor for concurrency
   "org.typelevel" %% "cats-core" % "2.7.0"          // Typelevel Cats library for functional programming
+  "com.typesafe.play" %% "play-json" % "2.9.2", // JSON library
+  "com.auth0" % "java-jwt" % "4.2.1"            // JWT library
+
 )
 
 // Repository settings (optional)
