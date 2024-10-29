@@ -1,0 +1,62 @@
+package controllers
+
+import play.api.mvc._
+import play.api.libs.json._
+import javax.inject._
+import services.{AuthService, UserService}
+import scala.concurrent.{ExecutionContext, Future}
+
+@Singleton
+class AuthController @Inject()(cc: ControllerComponents, authService: AuthService, userService: UserService)(implicit ec: ExecutionContext) extends AbstractController(cc) {
+
+  // JSON case classes for requests
+  case class LoginRequest(email: String, password: String)
+  case class SignupRequest(email: String, password: String)
+
+  implicit val loginFormat = Json.format[LoginRequest]
+  implicit val signupFormat = Json.format[SignupRequest]
+
+  // POST /signup
+  def signup: Action[JsValue] = Action.async(parse.json) { request =>
+    request.body.validate[SignupRequest].fold(
+      errors => Future.successful(BadRequest(Json.obj("error" -> "Invalid signup request"))),
+      signupData => {
+        userService.createUser(signupData.email, signupData.password).map {
+          case Some(user) => Ok(Json.obj("status" -> "success", "user" -> user))
+          case None       => Conflict(Json.obj("error" -> "User already exists"))
+        }
+      }
+    )
+  }
+
+  // POST /login
+  def login: Action[JsValue] = Action.async(parse.json) { request =>
+    request.body.validate[LoginRequest].fold(
+      errors => Future.successful(BadRequest(Json.obj("error" -> "Invalid login request"))),
+      loginData => {
+        authService.authenticate(loginData.email, loginData.password).map {
+          case Some(token) => Ok(Json.obj("status" -> "success", "token" -> token))
+          case None        => Unauthorized(Json.obj("error" -> "Invalid credentials"))
+        }
+      }
+    )
+  }
+
+  // POST /logout
+  def logout: Action[AnyContent] = Action { request =>
+    // Assuming token is invalidated by client; JWTs are usually stateless
+    Ok(Json.obj("status" -> "logged out"))
+  }
+
+  // POST /refresh-token
+  def refreshToken: Action[AnyContent] = Action.async { request =>
+    request.headers.get("Authorization").map { token =>
+      authService.refreshToken(token).map {
+        case Some(newToken) => Ok(Json.obj("status" -> "success", "token" -> newToken))
+        case None           => Unauthorized(Json.obj("error" -> "Invalid or expired token"))
+      }
+    }.getOrElse {
+      Future.successful(BadRequest(Json.obj("error" -> "Missing Authorization header")))
+    }
+  }
+}
