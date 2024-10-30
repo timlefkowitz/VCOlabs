@@ -1,0 +1,68 @@
+import javax.inject._
+import play.api.mvc._
+import play.api.libs.json.Json
+import scala.concurrent.{ExecutionContext, Future}
+
+// Mock data models for illustration
+case class User(id: Long, name: String, email: String, isAdmin: Boolean)
+object User {
+  implicit val userFormat = Json.format[User]
+}
+
+case class AppSetting(key: String, value: String)
+object AppSetting {
+  implicit val settingFormat = Json.format[AppSetting]
+}
+
+// AdminService - handles the business logic (mocked here)
+class AdminService @Inject()(implicit ec: ExecutionContext) {
+  private var users = List(
+    User(1, "Alice", "alice@example.com", isAdmin = false),
+    User(2, "Bob", "bob@example.com", isAdmin = true)
+  )
+  
+  private var settings = Map("siteTitle" -> "My App", "theme" -> "dark")
+
+  def listAllUsers(): Future[List[User]] = Future.successful(users)
+  
+  def deleteUserById(userId: Long): Future[Boolean] = {
+    users = users.filterNot(_.id == userId)
+    Future.successful(true)
+  }
+
+  def updateSetting(setting: AppSetting): Future[Boolean] = {
+    settings += (setting.key -> setting.value)
+    Future.successful(true)
+  }
+}
+
+// AdminController
+@Singleton
+class AdminController @Inject()(cc: ControllerComponents, adminService: AdminService)
+                               (implicit ec: ExecutionContext) extends AbstractController(cc) {
+
+  def listUsers = Action.async {
+    adminService.listAllUsers().map { users =>
+      Ok(Json.toJson(users))
+    }
+  }
+
+  def deleteUser(id: Long) = Action.async {
+    adminService.deleteUserById(id).map { result =>
+      if (result) Ok(Json.obj("status" -> "success", "message" -> s"User $id deleted"))
+      else NotFound(Json.obj("status" -> "error", "message" -> "User not found"))
+    }
+  }
+
+  def updateSetting = Action.async(parse.json) { request =>
+    request.body.validate[AppSetting].fold(
+      errors => Future.successful(BadRequest(Json.obj("status" -> "error", "message" -> "Invalid data"))),
+      setting => {
+        adminService.updateSetting(setting).map { result =>
+          if (result) Ok(Json.obj("status" -> "success", "message" -> "Setting updated"))
+          else InternalServerError(Json.obj("status" -> "error", "message" -> "Failed to update setting"))
+        }
+      }
+    )
+  }
+}
