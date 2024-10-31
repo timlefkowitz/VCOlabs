@@ -2,3 +2,5 @@
 POST    /users             controllers.UsersController.createUser
 GET     /users/:id         controllers.UsersController.getUser(id: Int)
 GET     /users             controllers.UsersController.getAllUsers
+GET     /                  controllers.HomeController.index
+
