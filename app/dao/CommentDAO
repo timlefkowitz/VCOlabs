@@ -1,0 +1,41 @@
+import scala.concurrent.{ExecutionContext, Future}
+
+trait CommentDAO {
+  def create(comment: Comment): Future[Long]
+  def findById(id: Long): Future[Option[Comment]]
+  def findByPostId(postId: Long): Future[Seq[Comment]]
+  def update(comment: Comment): Future[Int]
+  def delete(id: Long): Future[Int]
+}
+
+class SlickCommentDAO(db: Database)(implicit ec: ExecutionContext) extends CommentDAO {
+
+  // Add a new comment and return the auto-generated ID
+  override def create(comment: Comment): Future[Long] = {
+    val insertQuery = (comments returning comments.map(_.id)) += comment
+    db.run(insertQuery)
+  }
+
+  // Find a comment by its ID
+  override def findById(id: Long): Future[Option[Comment]] = {
+    db.run(comments.filter(_.id === id).result.headOption)
+  }
+
+  // Find all comments for a specific post ID
+  override def findByPostId(postId: Long): Future[Seq[Comment]] = {
+    db.run(comments.filter(_.postId === postId).result)
+  }
+
+  // Update a comment; returns the number of affected rows
+  override def update(comment: Comment): Future[Int] = {
+    val query = comments.filter(_.id === comment.id)
+      .map(c => (c.content, c.timestamp))
+      .update((comment.content, comment.timestamp))
+    db.run(query)
+  }
+
+  // Delete a comment by its ID; returns the number of affected rows
+  override def delete(id: Long): Future[Int] = {
+    db.run(comments.filter(_.id === id).delete)
+  }
+}
