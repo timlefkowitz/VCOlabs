@@ -49,3 +49,4 @@ class SynthController {
     println(s"Processing signal in Oscillator $name: $input")}
 
 
+case class Comment(id: Option[Long], postId: Long, content: String, author: String)
