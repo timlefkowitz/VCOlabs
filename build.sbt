@@ -19,6 +19,11 @@ libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-core" % "2.7.0"          // Typelevel Cats library for functional programming
   "com.typesafe.play" %% "play-json" % "2.9.2", // JSON library
   "com.auth0" % "java-jwt" % "4.2.1"            // JWT library
+  "org.postgresql" % "postgresql" % "42.2.23",        // PostgreSQL driver
+  "com.typesafe.slick" %% "slick" % "3.3.3",          // Slick for functional database access
+  "com.typesafe.slick" %% "slick-hikaricp" % "3.3.3"  // Slick connection pooling
+)
+
 
 )
 
