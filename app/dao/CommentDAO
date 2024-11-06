@@ -1,21 +1,31 @@
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-import scala.concurrent.ExecutionContext.Implicits.global
+import slick.jdbc.PostgresProfile.api._
 
-// Define a database connection
-val db = Database.forConfig("postgres")
+class CommentTable(tag: Tag) extends Table[Comment](tag, "comments") {
+  def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+  def postId = column[Long]("post_id")
+  def content = column[String]("content")
+  def author = column[String]("author")
 
-val commentDAO = new CommentDAO(db)
+  // Map columns to the Comment case class
+  def * = (id.?, postId, content, author) <> ((Comment.apply _).tupled, Comment.unapply)
+}
 
-// Example usage: Insert a new comment
-val newComment = Comment(None, 1, "This is a great post!", "AuthorName")
-val insertAction = commentDAO.insert(newComment)
+class CommentDAO(db: Database) {
+  val comments = TableQuery[CommentTable]
 
-// Execute the action
-val commentId = Await.result(db.run(insertAction), Duration.Inf)
-println(s"Inserted comment with ID: $commentId")
+  // Create a new comment
+  def insert(comment: Comment): DBIO[Long] =
+    (comments returning comments.map(_.id)) += comment
 
-// Fetch by postId
-val commentsAction = commentDAO.findByPostId(1)
-val comments = Await.result(db.run(commentsAction), Duration.Inf)
-println(s"Comments for post 1: $comments")
+  // Find a comment by ID
+  def findById(id: Long): DBIO[Option[Comment]] =
+    comments.filter(_.id === id).result.headOption
+
+  // Find all comments for a specific post
+  def findByPostId(postId: Long): DBIO[Seq[Comment]] =
+    comments.filter(_.postId === postId).result
+
+  // Delete a comment by ID
+  def delete(id: Long): DBIO[Int] =
+    comments.filter(_.id === id).delete
+}
