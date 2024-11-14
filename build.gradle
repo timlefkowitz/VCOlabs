@@ -1,0 +1,25 @@
+plugins {
+    id 'scala'                      // Adds Scala support
+    id 'application'                // Optional, for running the project easily
+}
+
+repositories {
+    mavenCentral()                   // Repository to fetch dependencies
+}
+
+dependencies {
+    implementation 'org.scala-lang:scala-library:2.13.10' // Scala library (change version as needed)
+
+    // Add ScalaTest for testing
+    testImplementation 'org.scalatest:scalatest_2.13:3.2.15'
+}
+
+application {
+    // Main class (optional if you want to use `gradle run` to start your app)
+    mainClass = 'main'          // Adjust this to match your main Scala object
+}
+
+tasks.withType(ScalaCompile) {
+    scalaCompileOptions.additionalParameters = ['-deprecation', '-feature'] // Optional, adds warnings
+}
+
