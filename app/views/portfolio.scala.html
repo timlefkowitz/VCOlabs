@@ -1,0 +1,15 @@
+@main("My Photography Portfolio") {
+    <div class="row">
+        @for(i <- 1 to 6) {
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="/assets/images/photo@i.jpg" class="card-img-top" alt="Photo @i">
+                    <div class="card-body">
+                        <h5 class="card-title">Photo @i</h5>
+                        <p class="card-text">A beautiful scene captured at location @i.</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
