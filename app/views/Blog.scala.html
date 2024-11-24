@@ -1,1 +1,20 @@
 
+package controllers
+
+import play.api.mvc._
+import play.api.libs.json._
+import javax.inject._
+
+@Singleton
+class BlogController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
+
+  // Dummy blog posts
+  private val posts = Seq(
+    BlogPost(1, "Welcome to My Blog", "This is the content of my first blog post.", "Author1", "2024-11-01"),
+    BlogPost(2, "Scala and Bootstrap", "How to create a blog view with Scala and Bootstrap.", "Author2", "2024-11-20")
+  )
+
+  def blog = Action { implicit request: Request[AnyContent] =>
+    Ok(views.html.blog(posts))
+  }
+}
