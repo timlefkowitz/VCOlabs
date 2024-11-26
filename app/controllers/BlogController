@@ -1,0 +1,41 @@
+package controllers
+
+import javax.inject._
+import play.api.mvc._
+import scala.concurrent.Future
+import models.BlogPost
+
+@Singleton
+class BlogController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
+
+  // Sample blog posts for demonstration
+  private var blogPosts = List(
+    BlogPost(1, "First Post", "Welcome to the blog!", "Author1"),
+    BlogPost(2, "Second Post", "Scala is awesome!", "Author2")
+  )
+
+  // List all blog posts
+  def listPosts = Action { implicit request: Request[AnyContent] =>
+    Ok(views.html.blogList(blogPosts))
+  }
+
+  // Show a single blog post
+  def showPost(id: Int) = Action { implicit request: Request[AnyContent] =>
+    blogPosts.find(_.id == id) match {
+      case Some(post) => Ok(views.html.blogDetail(post))
+      case None       => NotFound("Post not found")
+    }
+  }
+
+  // Add a new blog post (simplified)
+  def createPost = Action(parse.formUrlEncoded) { request =>
+    val title = request.body.get("title").flatMap(_.headOption).getOrElse("")
+    val content = request.body.get("content").flatMap(_.headOption).getOrElse("")
+    val author = request.body.get("author").flatMap(_.headOption).getOrElse("")
+
+    val newPost = BlogPost(blogPosts.size + 1, title, content, author)
+    blogPosts = blogPosts :+ newPost
+
+    Redirect(routes.BlogController.listPosts())
+  }
+}
