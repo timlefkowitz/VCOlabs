@@ -1,3 +1,5 @@
+// HIRE ME 
+
 # VCOlabs
 /my-project
 ├── build.sbt          # sbt build file (must be in the root directory)
